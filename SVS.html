@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3817 SVS</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 { margin-top: 0; color: #333; }
+        
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        select, input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+        }
+        select { background-color: #f8f9fa; cursor: pointer; }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 60%;
+        }
+        button:hover { background-color: #0056b3; }
+        
+        .result-card {
+            display: none; 
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+        .result-card p {
+            margin: 8px 0;
+            font-size: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .result-card span { font-weight: bold; color: #0056b3; }
+        .loading { color: #666; font-style: italic; display: none; margin-bottom: 10px; }
+        .error { color: red; font-weight: bold; display: none; margin-top: 10px; font-size: 14px;}
+        
+        .badge {
+            background: #ffc107;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>3817 SVS</h2>
+        
+        <div class="search-box">
+            <select id="sheetSelect">
+                <option value="3808">STATE 3808</option>
+                <option value="3820">STATE 3820</option>
+                <option value="3865">STATE 3865</option>
+            </select>
+            
+            <input type="text" id="searchInput" placeholder="Enter Player ID">
+            <button onclick="searchData()">Search</button>
+        </div>
+
+        <div id="loading" class="loading">Searching for data...</div>
+        <div id="error" class="error">Not in Top 200</div>
+
+        <div id="resultCard" class="result-card">
+            <p><strong>Name:</strong> <span id="resName">-</span></p>
+            <p><strong>ID:</strong> <span id="resID">-</span></p>
+            <p><strong>Alliance:</strong> <span id="resAliance">-</span></p>
+            <p><strong>Points:</strong> <span id="resPoint">-</span></p>
+            <p><strong>Rank:</strong> <span id="resRank">-</span></p>
+            <p><strong>Status:</strong> <span id="resStatus" class="badge">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        const sheetId = '1YYqoZq_8UyVkxg6rhGOJcucYFytV5sBrc5FEVksCNlY';
+
+        async function searchData() {
+            const selectedSheet = document.getElementById('sheetSelect').value;
+            const searchInput = document.getElementById('searchInput').value.trim();
+            
+            const resultCard = document.getElementById('resultCard');
+            const errorMsg = document.getElementById('error');
+            const loading = document.getElementById('loading');
+
+            if (!searchInput) {
+                alert('Please enter an ID before searching.');
+                return;
+            }
+
+            resultCard.style.display = 'none';
+            errorMsg.style.display = 'none';
+            loading.style.display = 'block';
+
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${selectedSheet}`;
+
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);?/);
+                
+                if (!match) {
+                    throw new Error("Cannot retrieve JSON format");
+                }
+
+                const data = JSON.parse(match[1]);
+                
+                if (!data.table || !data.table.rows) {
+                    throw new Error("No table data found in selected state");
+                }
+
+                const rows = data.table.rows;
+                let found = false;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const cellID = row.c[2] && row.c[2].v ? String(row.c[2].v).trim() : '';
+
+                    if (cellID === searchInput) {
+                        const rank = row.c[0] && row.c[0].v ? row.c[0].v : '-';
+                        const alliance = row.c[1] && row.c[1].v ? row.c[1].v : '-';
+                        const name = row.c[3] && row.c[3].v ? row.c[3].v : '-';
+                        const points = row.c[4] ? (row.c[4].f || row.c[4].v) : '-'; 
+                        const status = row.c[5] && row.c[5].v ? row.c[5].v : '-';
+
+                        document.getElementById('resName').innerText = name;
+                        document.getElementById('resID').innerText = searchInput;
+                        document.getElementById('resAliance').innerText = alliance || '-';
+                        document.getElementById('resPoint').innerText = points;
+                        document.getElementById('resRank').innerText = rank;
+                        document.getElementById('resStatus').innerText = status;
+
+                        found = true;
+                        break;
+                    }
+                }
+
+                loading.style.display = 'none';
+                
+                if (found) {
+                    resultCard.style.display = 'block';
+                } else {
+                    errorMsg.innerText = "Not in Top 200";
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMsg.innerText = "System Error: " + error.message;
+                errorMsg.style.display = 'block';
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
