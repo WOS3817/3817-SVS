@@ -32,7 +32,7 @@
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
-            align-items: center;
+            align-items: center; 
         }
         
         select, input {
@@ -43,19 +43,21 @@
             border-radius: 6px;
             font-size: 16px;
             text-align: center;
+            color: #444; 
         }
-        select { background-color: #f8f9fa; cursor: pointer; }
+        select { background-color: #fafafa; cursor: pointer; }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 30px;
+            padding: 10px 0;
             border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            width: 100%;
+            width: 65%; /* 🎯 บังคับขนาด 65% ตลอดเวลา */
+            transition: background-color 0.2s;
         }
         button:hover { background-color: #0056b3; }
         
@@ -84,7 +86,6 @@
             padding-bottom: 5px;
         }
         
-        /* นี่คือตัวการที่ทำให้ span ทุกตัวเป็นสีน้ำเงิน */
         .result-card span { font-weight: bold; color: #0056b3; } 
         
         .loading { color: #666; font-style: italic; display: none; margin-bottom: 10px; }
@@ -97,7 +98,6 @@
             font-weight: bold;
         }
         
-        /* แก้ไขโดยเติม !important เพื่อบังคับให้สีขาวชนะสีน้ำเงินเสมอ */
         .badge-success {
             background: #28a745 !important;
             color: #ffffff !important;
@@ -158,9 +158,11 @@
             if (selectedSheet === 'BLACKLIST') {
                 searchInput.style.display = 'none';
                 searchBtn.innerText = 'Show All Blacklist';
+                // ลบคำสั่งยืดขนาดปุ่มออกแล้ว
             } else {
                 searchInput.style.display = 'block';
                 searchBtn.innerText = 'Search';
+                // ลบคำสั่งปรับขนาดปุ่มออกแล้ว
             }
         }
 
