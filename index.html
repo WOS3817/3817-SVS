@@ -21,6 +21,9 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             width: 350px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
         }
         h2 { margin-top: 0; color: #333; }
         
@@ -52,10 +55,19 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            width: 60%;
+            width: 100%;
         }
         button:hover { background-color: #0056b3; }
         
+        .results-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        .results-container::-webkit-scrollbar { width: 6px; }
+        .results-container::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
+
         .result-card {
             display: none; 
             text-align: left;
@@ -63,6 +75,7 @@
             padding: 15px;
             border-radius: 8px;
             border-left: 5px solid #28a745;
+            margin-bottom: 10px;
         }
         .result-card p {
             margin: 8px 0;
@@ -70,17 +83,29 @@
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
         }
-        .result-card span { font-weight: bold; color: #0056b3; }
+        
+        /* นี่คือตัวการที่ทำให้ span ทุกตัวเป็นสีน้ำเงิน */
+        .result-card span { font-weight: bold; color: #0056b3; } 
+        
         .loading { color: #666; font-style: italic; display: none; margin-bottom: 10px; }
         .error { color: red; font-weight: bold; display: none; margin-top: 10px; font-size: 14px;}
         
         .badge {
-            background: #ffc107;
-            color: #000;
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
+        }
+        
+        /* แก้ไขโดยเติม !important เพื่อบังคับให้สีขาวชนะสีน้ำเงินเสมอ */
+        .badge-success {
+            background: #28a745 !important;
+            color: #ffffff !important;
+        }
+        
+        .badge-danger {
+            background: #dc3545 !important;
+            color: #ffffff !important; 
         }
     </style>
 </head>
@@ -90,46 +115,78 @@
         <h2>3817 SVS</h2>
         
         <div class="search-box">
-            <select id="sheetSelect">
+            <select id="sheetSelect" onchange="toggleInput()">
                 <option value="3808">STATE 3808</option>
                 <option value="3820">STATE 3820</option>
                 <option value="3865">STATE 3865</option>
+                <option value="BLACKLIST">BLACKLIST</option> 
             </select>
             
             <input type="text" id="searchInput" placeholder="Enter Player ID">
-            <button onclick="searchData()">Search</button>
+            <button id="searchBtn" onclick="searchData()">Search</button>
         </div>
 
-        <div id="loading" class="loading">Searching for data...</div>
+        <div id="loading" class="loading">Searching data...</div>
         <div id="error" class="error">Not in Top 200</div>
 
-        <div id="resultCard" class="result-card">
-            <p><strong>Name:</strong> <span id="resName">-</span></p>
-            <p><strong>ID:</strong> <span id="resID">-</span></p>
-            <p><strong>Alliance:</strong> <span id="resAliance">-</span></p>
-            <p><strong>Points:</strong> <span id="resPoint">-</span></p>
-            <p><strong>Rank:</strong> <span id="resRank">-</span></p>
-            <p><strong>Status:</strong> <span id="resStatus" class="badge">-</span></p>
+        <div id="resultsArea" class="results-container">
+            <div id="singleResultCard" class="result-card">
+                <p><strong>Name:</strong> <span id="resName">-</span></p>
+                <p><strong>ID:</strong> <span id="resID">-</span></p>
+                <p><strong>Alliance:</strong> <span id="resAliance">-</span></p>
+                <p id="field-points"><strong>Points:</strong> <span id="resPoint">-</span></p>
+                <p id="field-rank"><strong>Rank:</strong> <span id="resRank">-</span></p>
+                <p id="field-status"><strong>Status:</strong> <span id="resStatus">-</span></p>
+            </div>
+            
+            <div id="blacklistResults"></div>
         </div>
     </div>
 
     <script>
         const sheetId = '1YYqoZq_8UyVkxg6rhGOJcucYFytV5sBrc5FEVksCNlY';
 
+        function toggleInput() {
+            const selectedSheet = document.getElementById('sheetSelect').value;
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            document.getElementById('singleResultCard').style.display = 'none';
+            document.getElementById('blacklistResults').innerHTML = '';
+            document.getElementById('error').style.display = 'none';
+
+            if (selectedSheet === 'BLACKLIST') {
+                searchInput.style.display = 'none';
+                searchBtn.innerText = 'Show All Blacklist';
+            } else {
+                searchInput.style.display = 'block';
+                searchBtn.innerText = 'Search';
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchData();
+            }
+        });
+
         async function searchData() {
             const selectedSheet = document.getElementById('sheetSelect').value;
-            const searchInput = document.getElementById('searchInput').value.trim();
+            const searchInput = document.getElementById('searchInput').value.replace(/\s+/g, '');
+            const isBlacklist = (selectedSheet === 'BLACKLIST');
             
-            const resultCard = document.getElementById('resultCard');
+            const singleResultCard = document.getElementById('singleResultCard');
+            const blacklistResults = document.getElementById('blacklistResults');
             const errorMsg = document.getElementById('error');
             const loading = document.getElementById('loading');
 
-            if (!searchInput) {
+            if (!isBlacklist && !searchInput) {
                 alert('Please enter an ID before searching.');
                 return;
             }
 
-            resultCard.style.display = 'none';
+            singleResultCard.style.display = 'none';
+            blacklistResults.innerHTML = '';
             errorMsg.style.display = 'none';
             loading.style.display = 'block';
 
@@ -138,25 +195,52 @@
             try {
                 const response = await fetch(url);
                 const text = await response.text();
-                
                 const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);?/);
                 
-                if (!match) {
-                    throw new Error("Cannot retrieve JSON format");
-                }
+                if (!match) throw new Error("Cannot retrieve JSON format");
 
                 const data = JSON.parse(match[1]);
-                
-                if (!data.table || !data.table.rows) {
-                    throw new Error("No table data found in selected state");
-                }
+                if (!data.table || !data.table.rows) throw new Error("No table data found in selected state");
 
                 const rows = data.table.rows;
-                let found = false;
 
+                if (isBlacklist) {
+                    if (rows.length === 0) {
+                        loading.style.display = 'none';
+                        errorMsg.innerText = "Blacklist is empty.";
+                        errorMsg.style.display = 'block';
+                        return;
+                    }
+
+                    let allHtml = "";
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const alliance = row.c[0] && row.c[0].v ? row.c[0].v : '-';
+                        const id = row.c[1] && row.c[1].v ? row.c[1].v : '-';
+                        const name = row.c[2] && row.c[2].v ? row.c[2].v : '-';
+                        const punish = row.c[3] ? (row.c[3].f || row.c[3].v) : '-';
+
+                        if (id === '-' && name === '-') continue;
+
+                        allHtml += `
+                            <div class="result-card" style="display: block; border-left: 5px solid #dc3545;">
+                                <p><strong>Name:</strong> <span>${name}</span></p>
+                                <p><strong>ID:</strong> <span>${id}</span></p>
+                                <p><strong>Alliance:</strong> <span>${alliance}</span></p>
+                                <p><strong>Punish:</strong> <span class="badge badge-danger">${punish}</span></p>
+                            </div>
+                        `;
+                    }
+                    
+                    loading.style.display = 'none';
+                    blacklistResults.innerHTML = allHtml;
+                    return; 
+                }
+
+                let found = false;
                 for (let i = 0; i < rows.length; i++) {
                     const row = rows[i];
-                    const cellID = row.c[2] && row.c[2].v ? String(row.c[2].v).trim() : '';
+                    const cellID = row.c[2] && row.c[2].v ? String(row.c[2].v).trim() : ''; 
 
                     if (cellID === searchInput) {
                         const rank = row.c[0] && row.c[0].v ? row.c[0].v : '-';
@@ -170,7 +254,10 @@
                         document.getElementById('resAliance').innerText = alliance || '-';
                         document.getElementById('resPoint').innerText = points;
                         document.getElementById('resRank').innerText = rank;
-                        document.getElementById('resStatus').innerText = status;
+                        
+                        const statusSpan = document.getElementById('resStatus');
+                        statusSpan.innerText = status || '-';
+                        statusSpan.className = status ? 'badge badge-success' : 'badge';
 
                         found = true;
                         break;
@@ -180,7 +267,7 @@
                 loading.style.display = 'none';
                 
                 if (found) {
-                    resultCard.style.display = 'block';
+                    singleResultCard.style.display = 'block';
                 } else {
                     errorMsg.innerText = "Not in Top 200";
                     errorMsg.style.display = 'block';
