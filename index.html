@@ -44,6 +44,7 @@
             font-size: 16px;
             text-align: center;
             color: #444; 
+            accent-color: #444; /* 🎯 เพิ่มคำสั่งนี้เพื่อพยายามเปลี่ยนสี UI ของระบบให้ตรงกับตัวอักษร */
         }
         select { background-color: #fafafa; cursor: pointer; }
 
@@ -56,7 +57,7 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            width: 65%; /* 🎯 บังคับขนาด 65% ตลอดเวลา */
+            width: 65%; 
             transition: background-color 0.2s;
         }
         button:hover { background-color: #0056b3; }
@@ -158,16 +159,15 @@
             if (selectedSheet === 'BLACKLIST') {
                 searchInput.style.display = 'none';
                 searchBtn.innerText = 'Show All Blacklist';
-                // ลบคำสั่งยืดขนาดปุ่มออกแล้ว
             } else {
                 searchInput.style.display = 'block';
                 searchBtn.innerText = 'Search';
-                // ลบคำสั่งปรับขนาดปุ่มออกแล้ว
             }
         }
 
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
+                e.preventDefault(); // เพิ่มป้องกันไม่ให้เผลอกด Enter แล้วหน้าเว็บรีเฟรช
                 searchData();
             }
         });
