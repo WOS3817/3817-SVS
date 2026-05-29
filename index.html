@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3817 SVS</title>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VKMP03KGXC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VKMP03KGXC');
+    </script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -44,7 +54,7 @@
             font-size: 16px;
             text-align: center;
             color: #444; 
-            accent-color: #444; /* 🎯 เพิ่มคำสั่งนี้เพื่อพยายามเปลี่ยนสี UI ของระบบให้ตรงกับตัวอักษร */
+            caret-color: #444; /* เปลี่ยนเป็น caret-color สำหรับสีเคอร์เซอร์ */
         }
         select { background-color: #fafafa; cursor: pointer; }
 
@@ -165,7 +175,7 @@
 
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // เพิ่มป้องกันไม่ให้เผลอกด Enter แล้วหน้าเว็บรีเฟรช
+                e.preventDefault(); 
                 searchData();
             }
         });
