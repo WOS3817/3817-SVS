@@ -54,7 +54,7 @@
             font-size: 16px;
             text-align: center;
             color: #444; 
-            caret-color: #444; /* เปลี่ยนเป็น caret-color สำหรับสีเคอร์เซอร์ */
+            caret-color: #444;
         }
         select { background-color: #fafafa; cursor: pointer; }
 
@@ -185,6 +185,14 @@
             const searchInput = document.getElementById('searchInput').value.replace(/\s+/g, '');
             const isBlacklist = (selectedSheet === 'BLACKLIST');
             
+            // 🎯 เพิ่มโค้ดส่วนนี้เพื่อส่งคำค้นหาไปที่ GA4
+            if (!isBlacklist && searchInput && typeof gtag === 'function') {
+                gtag('event', 'search', {
+                    search_term: searchInput,
+                    search_type: selectedSheet
+                });
+            }
+
             const singleResultCard = document.getElementById('singleResultCard');
             const blacklistResults = document.getElementById('blacklistResults');
             const errorMsg = document.getElementById('error');
