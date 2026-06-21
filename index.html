@@ -185,7 +185,7 @@
             const searchInput = document.getElementById('searchInput').value.replace(/\s+/g, '');
             const isBlacklist = (selectedSheet === 'BLACKLIST');
             
-            // 🎯 เพิ่มโค้ดส่วนนี้เพื่อส่งคำค้นหาไปที่ GA4
+            // 🎯 ส่งคำค้นหาไปที่ GA4
             if (!isBlacklist && searchInput && typeof gtag === 'function') {
                 gtag('event', 'search', {
                     search_term: searchInput,
@@ -222,6 +222,7 @@
 
                 const rows = data.table.rows;
 
+                // --- เริ่มต้นส่วนแก้ไข BLACKLIST ---
                 if (isBlacklist) {
                     if (rows.length === 0) {
                         loading.style.display = 'none';
@@ -231,15 +232,25 @@
                     }
 
                     let allHtml = "";
+                    let validCount = 0; // เพิ่มตัวแปรเพื่อนับแถวที่มีข้อมูลจริงๆ
+
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
-                        const alliance = row.c[0] && row.c[0].v ? row.c[0].v : '-';
-                        const id = row.c[1] && row.c[1].v ? row.c[1].v : '-';
-                        const name = row.c[2] && row.c[2].v ? row.c[2].v : '-';
-                        const punish = row.c[3] ? (row.c[3].f || row.c[3].v) : '-';
+                        if (!row || !row.c) continue; // ข้ามแถวที่ไม่มี object ข้อมูล
 
-                        if (id === '-' && name === '-') continue;
+                        // ดึงข้อมูลและแปลงเป็น String เพื่อป้องกัน Error
+                        const alliance = row.c[0] && row.c[0].v ? String(row.c[0].v).trim() : '-';
+                        const id = row.c[1] && row.c[1].v ? String(row.c[1].v).trim() : '-';
+                        const name = row.c[2] && row.c[2].v ? String(row.c[2].v).trim() : '-';
+                        const punish = row.c[3] ? String(row.c[3].f || row.c[3].v).trim() : '-';
 
+                        // 1. ข้ามแถวที่ ID และ Name เป็นค่าว่าง หรือเป็น '-'
+                        if ((id === '-' && name === '-') || (!id && !name)) continue;
+                        
+                        // 2. ข้ามแถวที่เป็นหัวตาราง (Header)
+                        if (id.toLowerCase() === 'id' || name.toLowerCase() === 'name') continue;
+
+                        validCount++;
                         allHtml += `
                             <div class="result-card" style="display: block; border-left: 5px solid #dc3545;">
                                 <p><strong>Name:</strong> <span>${name}</span></p>
@@ -251,9 +262,18 @@
                     }
                     
                     loading.style.display = 'none';
-                    blacklistResults.innerHTML = allHtml;
+
+                    // ถ้ากรองข้อมูลแล้วไม่มีคนติด Blacklist เลย จะไม่แสดงการ์ดเปล่าๆ แต่จะแจ้งเตือนแทน
+                    if (validCount === 0) {
+                        errorMsg.innerText = "Blacklist is empty";
+                        errorMsg.style.display = 'block';
+                    } else {
+                        blacklistResults.innerHTML = allHtml;
+                    }
+                    
                     return; 
                 }
+                // --- สิ้นสุดส่วนแก้ไข BLACKLIST ---
 
                 let found = false;
                 for (let i = 0; i < rows.length; i++) {
